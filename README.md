@@ -32,6 +32,7 @@ A secure, production-style banking API built with Java 25, Spring Boot 4, and Sp
 
 ## Expanded Project: API Versioning and Idempotency
 
+### What's New
 - Refactored all endpoints to /api/v1/ paths
 - Built /api/v2/ endpoints with idempotency support
 - v1 responses include Deprecation and Sunset headers
