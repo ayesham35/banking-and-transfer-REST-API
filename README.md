@@ -29,3 +29,14 @@ A secure, production-style banking API built with Java 25, Spring Boot 4, and Sp
 - Owner-scoped authorization: accessing another user's account returns 404, not 403
 
 ---
+
+## Expanded Project: API Versioning and Idempotency
+
+- Refactored all endpoints to /api/v1/ paths
+- Built /api/v2/ endpoints with idempotency support
+- v1 responses include Deprecation and Sunset headers
+- v2 money operations require Idempotency-Key header
+- Same key + same body replays cached response safely
+- Same key + different body returns 409 Conflict
+- IdempotencyRecord entity with 24-hour expiry tracking
+
