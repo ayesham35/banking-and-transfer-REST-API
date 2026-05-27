@@ -1,7 +1,5 @@
 package com.example.bankapi;
 
-import com.example.bankapi.entity.Role;
-import com.example.bankapi.entity.User;
 import com.example.bankapi.repository.UserRepository;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.TransactionRepository;
@@ -10,13 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -30,7 +25,6 @@ class IdempotencyGuaranteeTest {
     @Autowired AccountRepository accountRepository;
     @Autowired TransactionRepository transactionRepository;
     @Autowired IdempotencyRecordRepository idempotencyRecordRepository;
-    @Autowired PasswordEncoder passwordEncoder;
 
     private String token;
     private Long accountId;
@@ -56,7 +50,7 @@ class IdempotencyGuaranteeTest {
         String response = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registerBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
