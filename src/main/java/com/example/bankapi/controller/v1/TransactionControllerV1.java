@@ -1,4 +1,4 @@
-package com.example.bankapi.controller;
+package com.example.bankapi.controller.v1;
 
 import com.example.bankapi.dto.transaction.TransactionResponse;
 import com.example.bankapi.service.TransactionService;
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
-public class TransactionController {
+public class TransactionControllerV1 {
 
     private final TransactionService transactionService;
 

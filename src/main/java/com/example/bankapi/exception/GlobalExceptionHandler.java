@@ -1,6 +1,7 @@
 package com.example.bankapi.exception;
 
 import com.example.bankapi.dto.ErrorResponse;
+import com.example.bankapi.idempotency.IdempotencyConflictException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -105,5 +106,12 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(status).body(body);
     }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ErrorResponse> handleImpotencyConflict(
+            IdempotencyConflictException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request, null);
+    }
+
 }
 

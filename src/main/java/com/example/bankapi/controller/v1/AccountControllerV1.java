@@ -1,4 +1,4 @@
-package com.example.bankapi.controller;
+package com.example.bankapi.controller.v1;
 
 import com.example.bankapi.dto.account.*;
 import com.example.bankapi.service.AccountService;
@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
-public class AccountController {
+public class AccountControllerV1 {
 
     private final AccountService accountService;
 
@@ -26,8 +26,8 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<AccountResponse> listAccounts (
-            @AuthenticationPrincipal UserDetails user ) {
+    public List<AccountResponse> listAccounts(
+            @AuthenticationPrincipal UserDetails user) {
         return accountService.findMyAccounts(user.getUsername());
     }
 
