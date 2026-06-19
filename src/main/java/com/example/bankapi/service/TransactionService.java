@@ -17,8 +17,8 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    public List<TransactionResponse> findHistoryForAccount(Long accountId, String username) {
-        Account account = accountRepository.findByIdAndOwner_Username(accountId, username)
+    public List<TransactionResponse> findHistoryForAccount(Long accountId, Long ownerId) {
+        Account account = accountRepository.findByIdAndOwnerId(accountId, ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         return transactionRepository.findHistoryForAccount(account.getId())

@@ -1,6 +1,5 @@
 package com.example.bankapi.idempotency;
 
-import com.example.bankapi.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,9 @@ public class IdempotencyService {
     private final ObjectMapper objectMapper;
 
     public Optional<IdempotencyRecord> findExisting(
-            String key, User user, String path, Object requestBody) {
+            String key, Long ownerId, String path, Object requestBody) {
 
-        Optional<IdempotencyRecord> existing = repository.findByIdempotencyKeyAndUserAndRequestPath(key, user, path);
+        Optional<IdempotencyRecord> existing = repository.findByIdempotencyKeyAndOwnerIdAndRequestPath(key, ownerId, path);
 
         if (existing.isPresent()) {
             String incomingHash = hashBody(requestBody);
@@ -33,12 +32,12 @@ public class IdempotencyService {
     }
 
     public void record(
-            String key, User user, String path, Object requestBody,
+            String key, Long ownerId, String path, Object requestBody,
             int responseStatus, Object responseBody) {
 
         IdempotencyRecord rec = IdempotencyRecord.builder()
                 .idempotencyKey(key)
-                .user(user)
+                .ownerId(ownerId)
                 .requestPath(path)
                 .requestHash(hashBody(requestBody))
                 .responseStatus(responseStatus)

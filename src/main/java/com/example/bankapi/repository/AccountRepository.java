@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    List<Account> findByOwner_UsernameOrderByCreatedAtDesc(String username);
+    List<Account> findByOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
-    Optional<Account> findByIdAndOwner_Username(Long id, String username);
+    Optional<Account> findByIdAndOwnerId(Long id, Long ownerId);
 
     Optional<Account> findByAccountNumber(String accountNumber);
 

@@ -1,6 +1,5 @@
 package com.example.bankapi.idempotency;
 
-import com.example.bankapi.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,9 +21,8 @@ public class IdempotencyRecord {
     @Column(name = "idempotency_key", nullable = false, length = 100)
     private String idempotencyKey;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long ownerId;
 
     @Column(name = "request_hash", nullable = false, length = 100)
     private String requestHash;

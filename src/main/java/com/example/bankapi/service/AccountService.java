@@ -8,14 +8,11 @@ import com.example.bankapi.entity.AccountStatus;
 import com.example.bankapi.exception.InsufficientFundsException;
 import com.example.bankapi.exception.InvalidTransferException;
 import com.example.bankapi.repository.AccountRepository;
-import com.example.bankapi.repository.UserRepository;
-import com.example.bankapi.entity.User;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.BankTransaction;
 import com.example.bankapi.entity.TransactionType;
 import com.example.bankapi.repository.TransactionRepository;
 import com.example.bankapi.exception.ResourceNotFoundException;
-import jakarta.transaction.InvalidTransactionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +26,9 @@ import java.util.List;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    public AccountResponse openAccount(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
+    public AccountResponse openAccount(Long ownerId) {
         String accountNumber;
         do {
             accountNumber = String.format("%012d", (long)(Math.random() * 1_000_000_000_000L));
@@ -44,7 +37,7 @@ public class AccountService {
 
         Account account = Account.builder()
                 .accountNumber(accountNumber)
-                .owner(user)
+                .ownerId(ownerId)
                 .balance(BigDecimal.ZERO)
                 .status(AccountStatus.ACTIVE)
                 .build();
@@ -61,8 +54,8 @@ public class AccountService {
 
     }
 
-    public List<AccountResponse> findMyAccounts(String username) {
-        return accountRepository.findByOwner_UsernameOrderByCreatedAtDesc(username)
+    public List<AccountResponse> findMyAccounts(Long ownerId) {
+        return accountRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)
                 .stream()
                 .map(account -> AccountResponse.builder()
                         .id(account.getId())
@@ -74,8 +67,8 @@ public class AccountService {
                 .toList();
     }
 
-    public AccountResponse findMyAccount(Long id, String username) {
-        Account account = accountRepository.findByIdAndOwner_Username(id, username)
+    public AccountResponse findMyAccount(Long id, Long ownerId) {
+        Account account = accountRepository.findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         return AccountResponse.builder()
@@ -87,8 +80,8 @@ public class AccountService {
                 .build();
     }
 
-    public AccountResponse deposit(Long accountId, DepositRequest request, String username) {
-        Account account = accountRepository.findByIdAndOwner_Username(accountId, username)
+    public AccountResponse deposit(Long accountId, DepositRequest request, Long ownerId) {
+        Account account = accountRepository.findByIdAndOwnerId(accountId, ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         account.setBalance(account.getBalance().add(request.getAmount()));
@@ -112,8 +105,8 @@ public class AccountService {
                 .build();
     }
 
-    public AccountResponse withdraw(Long accountId, WithdrawRequest request, String username) {
-        Account account = accountRepository.findByIdAndOwner_Username(accountId, username)
+    public AccountResponse withdraw(Long accountId, WithdrawRequest request, Long ownerId) {
+        Account account = accountRepository.findByIdAndOwnerId(accountId, ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found"));
 
         if (account.getStatus() == AccountStatus.FROZEN) {
@@ -149,8 +142,8 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountResponse transfer(Long fromAccountId, TransferRequest request, String username) {
-        Account source = accountRepository.findByIdAndOwner_Username(fromAccountId, username)
+    public AccountResponse transfer(Long fromAccountId, TransferRequest request, Long ownerId) {
+        Account source = accountRepository.findByIdAndOwnerId(fromAccountId, ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Source account not found"));
 
         Account destination = accountRepository.findByAccountNumber(request.getToAccountNumber())
