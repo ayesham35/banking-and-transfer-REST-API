@@ -1,43 +1,68 @@
-# Banking & Transfer REST API
+# Banking API — Microservices Architecture
 
-A secure, production-style banking API built with Java 25, Spring Boot 4, and Spring Security 7. Authenticated users can open accounts, deposit and withdraw funds, and transfer money between accounts. All transactions are immutable and transfers are atomic: if any step fails, no money moves.
+> **Branch:** `docker-microservices`  
+> For the original monolithic version see the `master` branch.
 
----
+This branch evolves the original monolith into a containerized two-service system. Authentication is handled by a separate `auth-service`; this service focuses exclusively on banking operations.
+
+## What changed from master
+
+- **Removed:** User entity, UserRepository, AuthController, AuthService, JwtService, JwtAuthenticationFilter
+- **Added:** OAuth2 Resource Server config — tokens are validated via auth-service's JWKS endpoint
+- Account ownership is now tracked by `owner_id` (Long) from the JWT subject, not a User foreign key
+- MySQL replaces H2; Flyway manages schema migrations
+- Dockerized with a multi-stage Dockerfile and docker-compose
+
+## Running the full system
+
+From the workspace root (parent of both `auth-service/` and `bankapi/`):
+
+```bash
+docker compose up --build
+```
+
+Services:
+- auth-service: `http://localhost:8081`
+- banking-service: `http://localhost:8080`
+- Adminer (DB browser): `http://localhost:8090`
+
+## Flow
+
+1. Register at `POST http://localhost:8081/api/auth/register`
+2. Use the returned JWT as a Bearer token for all banking endpoints
+3. Banking-service validates the JWT against auth-service's JWKS endpoint
+
+## Endpoints — Banking Service (port 8080)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/v1/accounts | List my accounts |
+| POST | /api/v1/accounts | Open an account |
+| GET | /api/v1/accounts/{id} | Get account by ID |
+| POST | /api/v1/accounts/{id}/deposits | Deposit funds |
+| POST | /api/v1/accounts/{id}/withdrawals | Withdraw funds |
+| POST | /api/v1/accounts/{id}/transfers | Transfer funds |
+| GET | /api/v1/accounts/{id}/transactions | Transaction history |
+| GET | /actuator/health | Health check |
 
 ## Tech Stack
 
-- **Java 25** / **Spring Boot 4.0.6**
-- **Spring Security 7** with JWT authentication
-- **Spring Data JPA** / **Hibernate 7**
-- **H2** in-memory database (MySQL-swappable)
-- **Lombok** for boilerplate reduction
-- **jjwt 0.13.0** for JWT signing and verification
-- **JUnit 6** / **Mockito** for testing
+- Java 25, Spring Boot 4.0.6
+- Spring Security 7 with OAuth2 Resource Server
+- Spring Data JPA + Flyway + MySQL 8
+- Docker + docker-compose
 
----
+## Architecture
 
-## Features
+```
+Client → auth-service (port 8081) → issues RS256 JWT
+Client → banking-service (port 8080) with JWT
+banking-service → fetches public key from auth-service JWKS endpoint
+banking-service → validates JWT signature → processes request
+```
 
-- JWT-based registration and login (carried over from Todo REST API)
-- Open bank accounts with server-generated account numbers
-- Deposit and withdraw from owned accounts
-- Transfer money between any two accounts by account number
-- View transaction history for owned accounts
-- Transactions are immutable — no update or delete endpoints exist
-- Atomic transfers with `@Transactional` — partial failures roll back completely
-- Optimistic locking on accounts with `@Version` to handle concurrent requests
-- Owner-scoped authorization: accessing another user's account returns 404, not 403
+Two separate MySQL databases — auth-db and banking-db. No shared tables, no foreign keys across services. The only contract between services is the JWT format and the JWKS endpoint.
 
----
+## Related
 
-## Expanded Project: API Versioning and Idempotency
-
-### What's New
-- Refactored all endpoints to /api/v1/ paths
-- Built /api/v2/ endpoints with idempotency support
-- v1 responses include Deprecation and Sunset headers
-- v2 money operations require Idempotency-Key header
-- Same key + same body replays cached response safely
-- Same key + different body returns 409 Conflict
-- IdempotencyRecord entity with 24-hour expiry tracking
-
+- [Auth Service](https://github.com/ayesham35/auth-service) — the identity provider that issues JWTs for this service
